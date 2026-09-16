@@ -28,8 +28,8 @@ primitive
 sqFill : ∀ {ℓ} (A : Set ℓ) → SqFill A
 sqFill = prim^sqFill
 
--- uip : ∀ {ℓ} {A : Set ℓ} {x y : A} (p q : x ≡ y) → p ≡ q
--- uip p q = sqFill _ p q refl refl
+uip : ∀ {ℓ} {A : Set ℓ} {x y : A} (p q : x ≡ y) → p ≡ q
+uip p q = sqFill _ p q refl refl
 
 module _ {C : Category} {Δ Γ : Ctx C} where
   open Category C
