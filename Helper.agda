@@ -3,9 +3,9 @@
 module Helper where
   open import Agda.Builtin.Cubical.Path public
   open import Agda.Primitive.Cubical
-    renaming ( primIMin       to _∧_  -- I → I → I
-             ; primIMax       to _∨_  -- I → I → I
-             ; primINeg       to ~_   -- I → I
+    renaming ( primIMin       to infixr 20 _∧_  -- I → I → I
+             ; primIMax       to infixr 20 _∨_  -- I → I → I
+             ; primINeg       to infix 30 ~_ -- I → I
              ; primComp       to comp
              ; primHComp      to hcomp
              ; primTransp     to transp) public
@@ -95,7 +95,7 @@ module Helper where
   tt* = lift tt
 
   if_then_else_end : I → I → I → I
-  if i then j else k end = (k ∧ (~ i ∨ j)) ∨ ((i ∨ k) ∧ j)
+  if i then j else k end = (k ∧ ((~ i) ∨ j)) ∨ ((i ∨ k) ∧ j)
 
   {-# INLINE if_then_else_end #-}
 
