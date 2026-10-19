@@ -95,7 +95,7 @@ module Helper where
   tt* = lift tt
 
   if_then_else_end : I → I → I → I
-  if i then j else k end = (k ∧ ((~ i) ∨ j)) ∨ ((i ∨ k) ∧ j)
+  if i then j else k end = (k ∧ (~ i ∨ j)) ∨ ((i ∨ k) ∧ j)
 
   {-# INLINE if_then_else_end #-}
 
