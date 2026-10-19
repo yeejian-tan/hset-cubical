@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical=no-glue --termination-depth=100 #-}
+{-# OPTIONS --cubical=no-glue #-}
 
 open import SqFillDef
 open import Helper
