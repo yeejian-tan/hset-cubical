@@ -2,7 +2,7 @@
 
 module Example.Category where
 
-open import Cubical.Foundations.Prelude using (_≡_; refl; congS; sym; _∙_)
+open import Cubical.Foundations.Prelude
 
 record Category : Set₁ where
   field

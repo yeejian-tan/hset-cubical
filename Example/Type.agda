@@ -4,17 +4,18 @@ open import Example.Category
 
 module Example.Type {C : Category} where
 
-open import Data.Product renaming (_,_ to [_,_])
 open import Example.Context
-open import Cubical.Foundations.Prelude hiding (_,_)
-open import Example.SubstitutionEquality using (sqFill; uip)
+open import Cubical.Foundations.Prelude renaming (_,_ to [_,_])
+open import Agda.Builtin.Cubical.SqFill renaming (prim^sqFill to sqFill)
+open import Example.SubstitutionEquality 
 
-open import Function hiding (_⟨_⟩_; _↣_)
+open import Function.Base hiding (_⟨_⟩_)
 
 open Category C
 
-infix 10 _↣_
-infixl 20 _⊙_
+-- infix 10 _↣_
+-- infix 1 _≅ᵗʸ_
+-- infixl 20 _⊙_
 
 private
   variable
@@ -22,6 +23,7 @@ private
     Δ Γ Θ : Ctx C
 
 record Ty (Γ : Ctx C) : Set₁ where
+  no-eta-equality
   constructor MkTy
   field
     ty-cell : (x : Obj) (γ : Γ ⟨ x ⟩) → Set
@@ -91,38 +93,96 @@ ty-cong-2-2 T {f}{f'}{g}{g'} e-hom {t = t} =
 ty-ctx-subst : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} → γ ≡ γ' → T ⟨ x , γ ⟩ → T ⟨ x , γ' ⟩
 ty-ctx-subst {Γ = Γ} T eq-γ t = T ⟪ hom-id , ctx-id Γ ∙ eq-γ ⟫ t
 
-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
+ty-ctx-subst-inverse-l : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ ⟩} →
+                        ty-ctx-subst T (sym eγ) (ty-ctx-subst T eγ t) ≡ t
+ty-ctx-subst-inverse-l T = (ty-cong-2-1 T hom-id-l) ∙ (ty-id T)
+
+ty-ctx-subst-inverse-r : (T : Ty Γ) {γ γ' : Γ ⟨ x ⟩} {eγ : γ ≡ γ'} {t : T ⟨ x , γ' ⟩} →
+                        ty-ctx-subst T eγ (ty-ctx-subst T (sym eγ) t) ≡ t
+ty-ctx-subst-inverse-r T = (ty-cong-2-1 T hom-id-l) ∙ (ty-id T)
+
+to-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
           {a b : A} (e : a ≡ b)
           {γ : A → Γ ⟨ x ⟩}
           {ta : T ⟨ x , γ a ⟩} {tb : T ⟨ x , γ b ⟩} → ty-ctx-subst T (cong γ e) ta ≡ tb
         → [ a , ta ] ≡ [ b , tb ]
-Σ-ty-eq T {a = a} e {γ = γ} {ta = ta} et =
+to-Σ-ty-eq T {a = a} e {γ = γ} {ta = ta} et =
   J (λ b' e' → (tb' : T ⟨ _ , γ b' ⟩) (et' : ty-ctx-subst T (cong γ e') ta ≡ tb') → [ a , ta ] ≡ [ b' , tb' ])
     (λ tb et' → cong ([ a ,_]) (sym (ty-id T) ∙ ty-cong T refl ∙ et'))
     e _ et
 
-record _↣_ {Γ : Ctx C} (T : Ty Γ) (S : Ty Γ) : Set where
-  field
-    func : ∀ {x} {γ} → T ⟨ x , γ ⟩ → S ⟨ x , γ ⟩
-    naturality : ∀ {x y} {f : Hom x y}
-                 {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
-                 {eγ : Γ ⟪ f ⟫ γy ≡ γx} {t : T ⟨ y , γy ⟩}
-               → S ⟪ f , eγ ⟫ (func t) ≡ func (T ⟪ f , eγ ⟫ t)
-
-open _↣_ public
-
-id-trans : (T : Ty Γ) → T ↣ T
-func (id-trans T) = id
-naturality (id-trans T) = refl
-
-_⊙_ : S ↣ T → R ↣ S → R ↣ T
-(φ ⊙ η) .func = func φ ∘ func η
-(φ ⊙ η) .naturality = naturality φ ∙ cong (func φ) (naturality η)
+from-Σ-ty-eq : ∀ {ℓ} {A : Set ℓ} (T : Ty Γ)
+               {a b : A} {γ : A → Γ ⟨ x ⟩}
+               {ta : T ⟨ x , γ a ⟩} {tb : T ⟨ x , γ b ⟩} →
+               [ a , ta ] ≡ [ b , tb ] →
+               Σ[ e ∈ a ≡ b ] (ty-ctx-subst T (cong γ e) ta ≡ tb)
+from-Σ-ty-eq {Γ = Γ} {x = x} {A = A} T {a = a} {b = b} {γ = γ} {ta = ta} {tb = tb} eq =
+  J (λ (p : Σ[ b' ∈ A ] (T ⟨ x , γ b' ⟩)) (eq' : [ a , ta ] ≡ p) →
+       Σ[ e ∈ a ≡ fst p ] (ty-ctx-subst T (cong γ e) ta ≡ snd p))
+    [ refl , strong-ty-id T ]
+    eq
 
 _[_] : Ty Γ → Δ ⇒ Γ → Ty Δ
-(T [ σ ]) .ty-cell x δ = T ⟨ x , func σ δ ⟩
-(T [ σ ]) .ty-hom {x} {y} f {γy} {γx} eγ-yx t = T ⟪ f , (naturality σ) ∙ (cong (func σ) eγ-yx) ⟫ t
-(T [ σ ]) .ty-cong f = ty-cong T f
-(T [ σ ]) .ty-id = strong-ty-id T
-(T [ σ ]) .ty-comp = strong-ty-comp T
+T [ σ ] ⟨ x , δ ⟩ = T ⟨ x , func σ δ ⟩
+_⟪_,_⟫_ (_[_] {Γ = Γ} T σ) f {δy}{δx} eγ-yx t = T ⟪ f , proof ⟫ t
+  where
+    proof : Γ ⟪ f ⟫ func σ δy ≡ func σ δx
+    proof = (naturality σ) ∙ (cong (func σ) eγ-yx)
+ty-cong (T [ σ ]) f = ty-cong T f
+ty-id (T [ σ ]) = strong-ty-id T
+ty-comp (T [ σ ]) = strong-ty-comp T
 
+ty-subst-id : (T : Ty Γ) → T [ id-subst Γ ] ≡ T
+ty-subst-id T i .ty-cell x γ = T ⟨ x , γ ⟩
+ty-subst-id T i .ty-hom f eγ t =
+  ty-cong T refl {eq-γ = refl ∙ cong id eγ} {eq-γ' = eγ} {t = t} i
+ty-subst-id T i .ty-cong eq-hom {eq-γ = eq-γ} {eq-γ' = eq-γ'} {t = t} =
+  sqFill (T ⟨ _ , _ ⟩)
+         (ty-cong (T [ id-subst _ ]) eq-hom)
+         (ty-cong T eq-hom)
+         (λ j → ty-subst-id T j .ty-hom _ eq-γ t)
+         (λ j → ty-subst-id T j .ty-hom _ eq-γ' t)
+         i
+ty-subst-id {Γ = Γ} T i .ty-id {t = t} =
+  sqFill (T ⟨ _ , _ ⟩)
+         (ty-id (T [ id-subst Γ ]))
+         (ty-id T)
+         (λ j → ty-subst-id T j .ty-hom hom-id (ctx-id Γ) t)
+         refl
+         i
+ty-subst-id {Γ = Γ} T i .ty-comp {f = f} {g = g} {eq-γ-zy = eq-γ-zy} {eq-γ-yx = eq-γ-yx} {t = t} =
+  sqFill (T ⟨ _ , _ ⟩)
+         (ty-comp (T [ id-subst Γ ]))
+         (ty-comp T)
+         (λ j → ty-subst-id T j .ty-hom (g · f) (strong-ctx-comp Γ eq-γ-zy eq-γ-yx) t)
+         (λ j → ty-subst-id T j .ty-hom f eq-γ-yx (ty-subst-id T j .ty-hom g eq-γ-zy t))
+         i
+
+ty-subst-comp : (T : Ty Θ) (τ : Γ ⇒ Θ) (σ : Δ ⇒ Γ) → T [ τ ] [ σ ] ≡ T [ τ ⊚ σ ]
+ty-subst-comp T τ σ i .ty-cell x δ = T ⟨ x , func τ (func σ δ) ⟩
+ty-subst-comp T τ σ i .ty-hom f eγ t =
+  ty-cong T refl
+    {eq-γ  = naturality τ ∙ cong (func τ) (naturality σ ∙ cong (func σ) eγ)}
+    {eq-γ' = naturality (τ ⊚ σ) ∙ cong (func (τ ⊚ σ)) eγ}
+    {t = t} i
+ty-subst-comp T τ σ i .ty-cong eq-hom {eq-γ = eq-γ} {eq-γ' = eq-γ'} {t = t} =
+  sqFill (T ⟨ _ , _ ⟩)
+         (ty-cong (T [ τ ] [ σ ]) eq-hom)
+         (ty-cong (T [ τ ⊚ σ ]) eq-hom)
+         (λ j → ty-subst-comp T τ σ j .ty-hom _ eq-γ t)
+         (λ j → ty-subst-comp T τ σ j .ty-hom _ eq-γ' t)
+         i
+ty-subst-comp {Δ = Δ} T τ σ i .ty-id {t = t} =
+  sqFill (T ⟨ _ , _ ⟩)
+         (ty-id (T [ τ ] [ σ ]))
+         (ty-id (T [ τ ⊚ σ ]))
+         (λ j → ty-subst-comp T τ σ j .ty-hom hom-id (ctx-id Δ) t)
+         refl
+         i
+ty-subst-comp {Δ = Δ} T τ σ i .ty-comp {f = f} {g = g} {eq-γ-zy = eq-γ-zy} {eq-γ-yx = eq-γ-yx} {t = t} =
+  sqFill (T ⟨ _ , _ ⟩)
+         (ty-comp (T [ τ ] [ σ ]))
+         (ty-comp (T [ τ ⊚ σ ]))
+         (λ j → ty-subst-comp T τ σ j .ty-hom (g · f) (strong-ctx-comp Δ eq-γ-zy eq-γ-yx) t)
+         (λ j → ty-subst-comp T τ σ j .ty-hom f eq-γ-yx (ty-subst-comp T τ σ j .ty-hom g eq-γ-zy t))
+         i
