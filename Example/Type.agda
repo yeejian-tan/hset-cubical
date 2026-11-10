@@ -29,11 +29,6 @@ record Ty (Γ : Ctx C) : Set₁ where
     ty-cell : (x : Obj) (γ : Γ ⟨ x ⟩) → Set
     ty-hom : {x y : Obj} (f : Hom x y) {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
            → Γ ⟪ f ⟫ γy ≡ γx → ty-cell y γy → ty-cell x γx
-    ty-cong : {f f' : Hom x y} (eq-hom : f ≡ f')
-              {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
-              {eq-γ : Γ ⟪ f ⟫ γy ≡ γx} {eq-γ' : Γ ⟪ f' ⟫ γy ≡ γx}
-              {t : ty-cell y γy}
-            → ty-hom f eq-γ t ≡ ty-hom f' eq-γ' t
     ty-id : {x : Obj} {γ : Γ ⟨ x ⟩} {t : ty-cell x γ}
           → ty-hom hom-id (ctx-id Γ) t ≡ t
     ty-comp : {x y z : Obj} {f : Hom x y} {g : Hom y z}
@@ -50,6 +45,14 @@ private
     T1 T2 T3 T4 : Ty Γ
 
 open Ty public
+
+ty-cong : (T : Ty Γ) {f f' : Hom x y} (eq-hom : f ≡ f')
+          {γy : Γ ⟨ y ⟩} {γx : Γ ⟨ x ⟩}
+          {eq-γ : Γ ⟪ f ⟫ γy ≡ γx} {eq-γ' : Γ ⟪ f' ⟫ γy ≡ γx}
+          {t : T ⟨ y , γy ⟩}
+        → T ⟪ f , eq-γ ⟫ t ≡ T ⟪ f' , eq-γ' ⟫ t
+ty-cong {Γ = Γ} T eq-hom {eq-γ = eq-γ} {eq-γ' = eq-γ'} {t} i =
+  T ⟪ (eq-hom i) , sqFill (Γ ⟨ _ ⟩) eq-γ eq-γ' (cong (Γ ⟪_⟫ _) eq-hom) refl i ⟫ t
 
 strong-ty-id : (T : Ty Γ) {γ : Γ ⟨ x ⟩} {eγ : Γ ⟪ hom-id ⟫ γ ≡ γ} {t : T ⟨ x , γ ⟩}
              → T ⟪ hom-id , eγ ⟫ t ≡ t
@@ -128,7 +131,6 @@ _⟪_,_⟫_ (_[_] {Γ = Γ} T σ) f {δy}{δx} eγ-yx t = T ⟪ f , proof ⟫ t
   where
     proof : Γ ⟪ f ⟫ func σ δy ≡ func σ δx
     proof = (naturality σ) ∙ (cong (func σ) eγ-yx)
-ty-cong (T [ σ ]) f = ty-cong T f
 ty-id (T [ σ ]) = strong-ty-id T
 ty-comp (T [ σ ]) = strong-ty-comp T
 
@@ -136,13 +138,6 @@ ty-subst-id : (T : Ty Γ) → T [ id-subst Γ ] ≡ T
 ty-subst-id T i .ty-cell x γ = T ⟨ x , γ ⟩
 ty-subst-id T i .ty-hom f eγ t =
   ty-cong T refl {eq-γ = refl ∙ cong id eγ} {eq-γ' = eγ} {t = t} i
-ty-subst-id T i .ty-cong eq-hom {eq-γ = eq-γ} {eq-γ' = eq-γ'} {t = t} =
-  sqFill (T ⟨ _ , _ ⟩)
-         (ty-cong (T [ id-subst _ ]) eq-hom)
-         (ty-cong T eq-hom)
-         (λ j → ty-subst-id T j .ty-hom _ eq-γ t)
-         (λ j → ty-subst-id T j .ty-hom _ eq-γ' t)
-         i
 ty-subst-id {Γ = Γ} T i .ty-id {t = t} =
   sqFill (T ⟨ _ , _ ⟩)
          (ty-id (T [ id-subst Γ ]))
@@ -165,13 +160,6 @@ ty-subst-comp T τ σ i .ty-hom f eγ t =
     {eq-γ  = naturality τ ∙ cong (func τ) (naturality σ ∙ cong (func σ) eγ)}
     {eq-γ' = naturality (τ ⊚ σ) ∙ cong (func (τ ⊚ σ)) eγ}
     {t = t} i
-ty-subst-comp T τ σ i .ty-cong eq-hom {eq-γ = eq-γ} {eq-γ' = eq-γ'} {t = t} =
-  sqFill (T ⟨ _ , _ ⟩)
-         (ty-cong (T [ τ ] [ σ ]) eq-hom)
-         (ty-cong (T [ τ ⊚ σ ]) eq-hom)
-         (λ j → ty-subst-comp T τ σ j .ty-hom _ eq-γ t)
-         (λ j → ty-subst-comp T τ σ j .ty-hom _ eq-γ' t)
-         i
 ty-subst-comp {Δ = Δ} T τ σ i .ty-id {t = t} =
   sqFill (T ⟨ _ , _ ⟩)
          (ty-id (T [ τ ] [ σ ]))
