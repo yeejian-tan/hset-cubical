@@ -40,6 +40,8 @@ private
 ι⁻¹[_]_ : T ≡ S → Tm Γ T → Tm Γ S
 ι⁻¹[ p ] t = subst (Tm _) p t
 
+ι-cong : {T=S : T ≡ S} → s ≡ s' → ι[ T=S ] s ≡ ι[ T=S ] s'
+ι-cong {T=S = T=S} e = cong (ι[ T=S ]_) e
 
 -- substitution of terms
 _[_]' : Tm Γ T → (σ : Δ ⇒ Γ) → Tm Δ (T [ σ ])

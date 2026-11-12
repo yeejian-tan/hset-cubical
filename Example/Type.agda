@@ -125,6 +125,7 @@ from-Σ-ty-eq {Γ = Γ} {x = x} {A = A} T {a = a} {b = b} {γ = γ} {ta = ta} {t
     [ refl , strong-ty-id T ]
     eq
 
+-- substitution of types
 _[_] : Ty Γ → Δ ⇒ Γ → Ty Δ
 T [ σ ] ⟨ x , δ ⟩ = T ⟨ x , func σ δ ⟩
 _⟪_,_⟫_ (_[_] {Γ = Γ} T σ) f {δy}{δx} eγ-yx t = T ⟪ f , proof ⟫ t
@@ -174,3 +175,20 @@ ty-subst-comp {Δ = Δ} T τ σ i .ty-comp {f = f} {g = g} {eq-γ-zy = eq-γ-zy}
          (λ j → ty-subst-comp T τ σ j .ty-hom (g · f) (strong-ctx-comp Δ eq-γ-zy eq-γ-yx) t)
          (λ j → ty-subst-comp T τ σ j .ty-hom f eq-γ-yx (ty-subst-comp T τ σ j .ty-hom g eq-γ-zy t))
          i
+
+ty-subst-cong-ty : (σ : Δ ⇒ Γ) → T ≡ S → T [ σ ] ≡ S [ σ ]
+ty-subst-cong-ty σ e i = (e i) [ σ ]
+
+ty-subst-cong-subst : {σ τ : Δ ⇒ Γ} → σ ≡ τ → (T : Ty Γ) → T [ σ ] ≡ T [ τ ]
+ty-subst-cong-subst e T = cong (T [_]) e
+
+
+ty-subst-cong-subst-2-1 : {σ1 : Γ ⇒ Δ} {σ2 : Δ ⇒ Θ} {τ : Γ ⇒ Θ}
+                          (T : Ty Θ) → σ2 ⊚ σ1 ≡ τ →
+                          T [ σ2 ] [ σ1 ] ≡ T [ τ ]
+ty-subst-cong-subst-2-1 {σ1 = σ1} {σ2 = σ2} {τ = τ} T ε =
+    T [ σ2 ] [ σ1 ]
+  ≡⟨ ty-subst-comp T σ2 σ1 ⟩
+    T [ σ2 ⊚ σ1 ]
+  ≡⟨ cong (T [_]) ε ⟩
+    T [ τ ] ∎
