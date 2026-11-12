@@ -5,6 +5,7 @@ module Example.Category where
 open import Cubical.Foundations.Prelude
 
 record Category : Set₁ where
+  no-eta-equality
   field
     Obj    : Set
     Hom    : Obj → Obj → Set
@@ -12,7 +13,7 @@ record Category : Set₁ where
     _·_    : {x y z : Obj} → Hom y z → Hom x y → Hom x z
   infixr 9 _·_
   field
-    ·-assoc  : {x y z w : Obj} (f : Hom x y) (g : Hom y z) (h : Hom z w)
+    ·-assoc  : {x y z w : Obj} {f : Hom x y} {g : Hom y z} {h : Hom z w}
              → (h · g) · f ≡ h · (g · f)
     hom-id-r : {x y : Obj} {f : Hom x y} → f · hom-id ≡ f
     hom-id-l : {x y : Obj} {f : Hom x y} → hom-id · f ≡ f
@@ -28,7 +29,7 @@ _^op : Category → Category
 (C ^op) .Hom x y = Hom C y x
 (C ^op) .hom-id  = hom-id C
 (C ^op) ._·_ f g = _·_ C g f
-(C ^op) .·-assoc f g h = sym (·-assoc C h g f)
+(C ^op) .·-assoc {f = f} {g = g} {h = h} = sym (·-assoc C {f = h} {g = g} {h = f})
 (C ^op) .hom-id-r = hom-id-l C 
 (C ^op) .hom-id-l = hom-id-r C
 
