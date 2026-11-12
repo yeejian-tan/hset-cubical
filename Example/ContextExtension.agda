@@ -60,9 +60,17 @@ to-ext-subst-syntax σ t = to-ext-subst _ σ t
 infixl 4 to-ext-subst-syntax
 syntax to-ext-subst-syntax σ t = σ ∷ˢ t
 
+ctx-ext-subst-β₁ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) → π ⊚ ⟨ σ , t ∈ T ⟩ ≡ σ
+ctx-ext-subst-β₁ σ t i .func = func σ
+ctx-ext-subst-β₁ {T = T} σ t i .naturality = uip (naturality (π ⊚ ⟨ σ , t ∈ T ⟩)) (naturality σ) i
+
+-- ctx-ext-subst-β₂ : (σ : Δ ⇒ Γ) (t : Tm Δ (T [ σ ])) →
+--                    ξ [ ⟨ σ , t ∈ T ⟩ ]' ≡ ι[ ty-subst-cong-subst-2-1 T (ctx-ext-subst-β₁ σ t) ] t
+-- ctx-ext-subst-β₂ {T = T} σ t = {!!}
+
 ctx-ext-subst-η : (τ : Δ ⇒ Γ ,, T) → ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩ ≡ τ
 ctx-ext-subst-η τ i .func = func τ
-ctx-ext-subst-η {T = T} τ i .naturality = uip {C = C} (naturality ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩) (naturality τ) i
+ctx-ext-subst-η {T = T} τ i .naturality = uip (naturality ⟨ π ⊚ τ , ext-subst-to-term τ ∈ T ⟩) (naturality τ) i
 
 conv-eta : (S : Ty (Γ ,, T)) (τ : Δ ⇒ Γ ,, T) →
          Tm Δ (S [ τ ]) →

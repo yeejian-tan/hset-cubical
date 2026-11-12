@@ -19,6 +19,11 @@ record Ctx (C : Category) : Set₁ where
   
 open Ctx public renaming (ctx-cell to _⟨_⟩; ctx-hom to _⟪_⟫_)
 
+-- postulate
+--   uip : ∀{ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ y) → p ≡ q
+uip : ∀{ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ y) → p ≡ q
+uip {A = A} p q = sqFill A p q refl refl
+
 module _ {C : Category} where
   infix 10 _⇒_
   infix 20 _⊚_
@@ -94,10 +99,6 @@ module _ {C : Category} where
     ≡⟨ cong (func τ) (naturality σ) ⟩
       func τ (func σ (Δ ⟪ f ⟫ δ)) ∎
 
-  -- postulate
-  --   uip : ∀{ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ y) → p ≡ q
-  uip : ∀{ℓ} {A : Type ℓ} {x y : A} (p q : x ≡ y) → p ≡ q
-  uip {A = A} p q = sqFill A p q refl refl
 
   id-subst-unitʳ : (σ : Δ ⇒ Γ) → σ ⊚ id-subst Δ ≡ σ
   id-subst-unitʳ σ i .func = func σ
