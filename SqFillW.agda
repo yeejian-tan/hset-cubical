@@ -85,13 +85,6 @@ module SqFillW where
           encodeWHollowSquare i j (j = i0) = (encodeW w-0 i .fst , encodeW w-0 i .snd)
           encodeWHollowSquare i j (j = i1) = (encodeW w-1 i .fst , encodeW w-1 i .snd)
 
-
-          l' r' u' d' : I → Σ S (λ s → P s → W S P)
-          l' j = (el j .fst , el j .snd)
-          r' j = (er j .fst , er j .snd)
-          u' i = (eu i .fst , eu i .snd)
-          d' i = (ed i .fst , ed i .snd)
-
           spread : (i j i' j' : I) → sqs i j ≡ sqs i' j'
           spread i j i' j' k = sqs (if k then i' else i end) (if k then j' else j end)
 
