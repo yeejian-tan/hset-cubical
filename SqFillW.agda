@@ -9,7 +9,7 @@ module SqFillW where
   data W {ℓS ℓP} (S : Type ℓS) (P : S → Type ℓP) : Type (ℓS ⊔ ℓP) where
     sup-W : (s : S) → (P s → W S P) → W S P
 
-  module _ {ℓS ℓP} (S : Type ℓS) (P : S → Type ℓP) (sqFillS : SqFill S) (sqFillP : (s : S) → SqFill (P s)) where
+  module _ {ℓS ℓP} (S : Type ℓS) (P : S → Type ℓP) (sqFillS : SqFill S) where
 
     open import Agda.Builtin.Bool
     open import Agda.Builtin.Nat renaming (Nat to ℕ)
