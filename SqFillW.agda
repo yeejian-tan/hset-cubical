@@ -11,8 +11,6 @@ module SqFillW where
 
   module _ {ℓS ℓP} (S : Type ℓS) (P : S → Type ℓP) (sqFillS : SqFill S) where
 
-    open import Agda.Builtin.Bool
-    open import Agda.Builtin.Nat renaming (Nat to ℕ)
     open import Agda.Builtin.Sigma
 
     WtoΣ : W S P → Σ S (λ s → P s → W S P)
@@ -62,9 +60,6 @@ module SqFillW where
           (decodeSquare encodeWFilledSquare i j)
         )
         where
-          open import SqFillPi
-          open import SqFillSigma
-
           sqs = sqFillS (λ i → encodeW w0- i .fst) (λ i → encodeW w1- i .fst) (λ i → encodeW w-0 i .fst) (λ i → encodeW w-1 i .fst)
 
           el : (s00 , x00) ≡ WtoΣ (sup-W s01 x01)
