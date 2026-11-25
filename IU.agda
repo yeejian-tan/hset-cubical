@@ -249,14 +249,55 @@ module IU where
     IUEl : Fam
     IUEl = IU , El
 
-
   IUEl : ℕ → Fam
   sqFillIU : ∀ n → SqFill (IUEl n .fst) -- every universe has sqfill
   sqFillIUEl : ∀ n A' → SqFill (IUEl n .snd A') -- every type in every universe has sqfill
 
+
+
   IUEl zero = Step.IUEl (⊥ , λ ()) (λ {}) λ () -- no previous universe
-  IUEl (suc n) = Step.IUEl (IUEl n) (sqFillIU n) λ A' → sqFillIUEl n A'
-  sqFillIU zero = Step.sqFillIU (⊥ , λ ()) (λ {}) λ () --
-  sqFillIU (suc n) = Step.sqFillIU (IUEl n) (sqFillIU n) (λ A → sqFillIUEl n A) --
-  sqFillIUEl zero = Step.sqFillIUEl (⊥ , λ ()) (λ {}) λ () --
-  sqFillIUEl (suc n) = Step.sqFillIUEl (IUEl n) (sqFillIU n) (λ A → sqFillIUEl n A) --
+  IUEl (suc n) = Step.IUEl (IUEl n) (sqFillIU n) (λ A' → sqFillIUEl n A')
+
+  sqFillIU zero = Step.sqFillIU (⊥ , λ ()) (λ {}) λ ()
+  sqFillIU (suc n) = Step.sqFillIU (IUEl n) (sqFillIU n) (λ A → sqFillIUEl n A)
+
+  sqFillIUEl zero = Step.sqFillIUEl (⊥ , λ ()) (λ {}) λ ()
+  sqFillIUEl (suc n) = Step.sqFillIUEl (IUEl n) (sqFillIU n) (λ A → sqFillIUEl n A)
+
+  -- There are two behaviours:
+  -- 1. one where we inspect the corners,
+  -- 2. the other where we still inspect the corners,
+  --   but in the special case where the edges share a head,
+  --   we return 1 but manually remove regularity.
+  -- we want sqfill to go into the arguments if edges share a head...
+  --     sqFill (λ i → (x : Al) → Bl x) ... (λ i → (x : Ad) → Bd x) i j
+  --   = (x : sqFill Al ... Ad i j) → ((λ x → sqFill (Bl x) ... (Bd x) i j) x)
+  -- and having constant edges is then a particular case.
+  -- Q: in IU, does sqfill/hcomp on a constant hollow square/constant open box gives back constant?
+  -- R: If so, we have a justification for shortcutting sqfill/hcomp on constants in the universe
+  -- Q: in IU, does sqfill/hcomp on a square/box whose edges share a head give us the constant?
+  -- R: If so, we have a justification for pushing squares into sqfill/hcomp in the universe
+  --
+  --
+  -- ⟦ U ⟧            = IU
+  -- codes for types → constructors
+  -- ⟦ Û ⟧            = IU'
+  -- ⟦ Small' ⟧       = El' Small'
+  -- ⟦ ℕ̂ ⟧           = ℕ'
+  -- ⟦ (x : Â) →̂ B̂ ⟧ = Π' ⟦ Â ⟧ ⟦ B̂ ⟧
+  --
+  -- recall: Γ ⊢ sqFill Â : SqFill (El Â), indeed:
+  -- ⟦ sqFill Â ⟧ = sqFillEl ⟦ Â ⟧ : SqFill (El ⟦ Â ⟧) = ⟦ SqFill (El Â) ⟧
+  -- (1)          = (2)
+  -- Checks if computation on sqfill agreed in translation.
+  -- For Nat, easily.
+  -- For Pi, some hoops to jump through:
+  -- (1) = ⟦ sqFill ((x : Â) →̂ B̂) ⟧ = ⟦ sqFillPi (λ x → sqFill B̂) ⟧ = sqFillPi (λ x → sqFillEl ⟦ B̂ ⟧) = (2)
+  -- For U, ⟦ sqFill Û ⟧ = sqFillEl IU' = sqFillIUPrev = basically sqFillIU, i.e. the encode-decode proof.
+  --   so preservation of equality on sqfillU amounts to having at most as much computation as in the encode-decode proof.
+  --   which is what we want to test [FIXME]
+  -- For smaller types, it amounts to having sqFillElPrev, which is a recursive case to prove preservation.
+  -- So we have that sqFill in source translates to sqFillEl in target, a fitting name.
+
+  -- now we wonder about hcompU in the source.
+  -- does it also push the hcompU for edges that start
