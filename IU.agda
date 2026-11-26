@@ -275,9 +275,41 @@ module IU where
   -- and having constant edges is then a particular case.
   -- Q: in IU, does sqfill/hcomp on a constant hollow square/constant open box gives back constant?
   -- R: If so, we have a justification for shortcutting sqfill/hcomp on constants in the universe
+  -- Guess: since encode is J, the refl case cannot compute due to regularity, so yes but modulo regularity.
+  --
   -- Q: in IU, does sqfill/hcomp on a square/box whose edges share a head give us the constant?
   -- R: If so, we have a justification for pushing squares into sqfill/hcomp in the universe
+  -- Guess: same regularity issue; but modulo it, if edges share head, so must the corners, and by definition it computes.
   --
+  -- Experiments to run:
+  -- 1. sqFillIU on four Π'-headed edges on (i) closed, and (ii) a neutral argument. Does the outer hcomp reduce away?
+  --    Guess: since the outer hcomp has decodeEncode as walls, which is by J on paths in IU.
+  --           So the form is something like [hcomp ... (transp ... (p))].
+  --           Unless they commute, I think the inner transp gets blocked due to regularity.
+  --    Result (see IUExperiments.agda): the outer hcomp is pushed into Π' (exp. 3), so the
+  --           result is always Π'-headed. (i) closed: ≡ ℕ→ℕ judgmentally, though only up to
+  --           eta; the syntactic normal form is a ~1.4MB hcomp/transp tower. (ii) neutral:
+  --           not the expected square; already the domain is stuck on transpIU … i0 A.
+  --
+  -- 2. sqFillIU on a constant square: constant or a transport?
+  --    Guess: constant only for closed squares, otherwise stuck, due to lack of regularity.
+  --    Result: confirmed. ℕ', IU' normalise to the constant; closed Π' is constant up to
+  --           conversion; Π' A B and El' a₀ keep their head but the arguments are stuck.
+  --           Root cause: IU is a *parametrised* data type, so transp (λ _ → IU) i0 A
+  --           is a stuck transpIU (parameterless data types get transp = id).
+  --
+  -- 3. hcomp {IU} with Π'-headed walls and base, does agda push into the arguments?
+  --    Guess: yes, as seen in the type checker.
+  --    Result: yes, via the generated Π'-0/Π'-1 and a comp over the constructor telescope,
+  --           but not the naive  Π' A (λ x → hcomp … (B x)): the arguments get wrapped in
+  --           transpIU/transp along constant lines, which are stuck on neutrals.
+  --
+  -- 4. El (hcomp {IU} <neutral terms> i): reduce or get stuck?
+  --    Guess: hcomp on neutral terms get stuck, so does it too.
+  --    Result: confirmed; stuck as soon as the base or any wall is neutral (even with
+  --           base ℕ'). With all-Π' walls/base, El does compute to a Π-type.
+  --
+  -- Q: in our system, hcomp in the universe computes, so there is no need for the hcompU as a type constructor??
   --
   -- ⟦ U ⟧            = IU
   -- codes for types → constructors
